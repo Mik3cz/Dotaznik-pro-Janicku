@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dotazník 💗</title>
+<style>
+  :root { --font: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; }
+  body.neutral { --bg1:#ece6f7; --bg2:#cfc3ea; --card:#ffffffee; --ink:#2d2540; --accent:#7b4fd0; --accent2:#a77df0; --soft:#efe9fb; --line:#d7cdf0; }
+  body.romantic { --bg1:#ffe6f0; --bg2:#ffb3d1; --card:#fffafcee; --ink:#4a1630; --accent:#e91e78; --accent2:#ff6fa8; --soft:#ffe9f2; --line:#ffc2da; }
+  body.spicy { --bg1:#2a0a14; --bg2:#6b0f2a; --card:#2b0d18ee; --ink:#ffe3ea; --accent:#ff2e5f; --accent2:#ff7a45; --soft:#451224; --line:#7a1d3a; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; min-height:100%; }
+  body { font-family: var(--font); color: var(--ink); background: linear-gradient(160deg, var(--bg1), var(--bg2)) fixed; transition: background .8s, color .5s; display:flex; justify-content:center; padding:18px 12px 40px; }
+  main { width:100%; max-width:640px; background:var(--card); border-radius:26px; padding:22px 20px 20px; box-shadow:0 12px 40px #0003; backdrop-filter: blur(6px); position:relative; z-index:2; align-self:flex-start; }
+  #progress { height:8px; background:var(--soft); border-radius:99px; overflow:hidden; margin-bottom:16px; }
+  #bar { height:100%; width:0; background:linear-gradient(90deg,var(--accent2),var(--accent)); transition:width .5s; border-radius:99px; }
+  .screen { display:none; animation: fadein .5s; }
+  .screen.active { display:block; }
+  @keyframes fadein { from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none} }
+  .emojis { font-size:2.2rem; text-align:center; letter-spacing:6px; min-height:2.8rem; }
+  h1 { text-align:center; font-size:1.6rem; margin:.3rem 0 .2rem; color:var(--accent); }
+  .sub { text-align:center; margin:0 0 18px; opacity:.85; }
+  .q { margin:18px 0; }
+  .q > label { display:block; font-weight:600; margin-bottom:8px; }
+  input[type=text], input[type=datetime-local], input[type=date], textarea {
+    width:100%; padding:12px 14px; font:inherit; color:var(--ink); background:var(--soft);
+    border:2px solid var(--line); border-radius:14px; outline:none; transition:border .2s, box-shadow .2s;
+  }
+  textarea { min-height:90px; resize:vertical; }
+  input:focus, textarea:focus { border-color:var(--accent); box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 20%, transparent); }
+  .opts { display:flex; flex-wrap:wrap; gap:8px; }
+  .opts.col { flex-direction:column; }
+  .opt { font:inherit; color:var(--ink); background:var(--soft); border:2px solid var(--line); border-radius:14px; padding:10px 16px; cursor:pointer; transition:transform .15s, background .2s, border .2s, color .2s; text-align:left; }
+  .opt:hover { transform:translateY(-2px); border-color:var(--accent2); }
+  .opt.sel { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .opt.bad { background:#e11d2e; border-color:#e11d2e; color:#fff; animation:shake .4s; cursor:not-allowed; }
+  .opt.good { background:#22b573; border-color:#22b573; color:#fff; }
+  .opt.blocked { background:#111; border-color:#111; color:#555; cursor:not-allowed; }
+  .opt.blocked:hover { transform:none; }
+  .opt.pop { animation:popin .5s; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-7px)} 40%{transform:translateX(7px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
+  @keyframes popin { from{transform:scale(.3); opacity:0} to{transform:scale(1); opacity:1} }
+  .scale .opt { min-width:44px; text-align:center; padding:10px 0; }
+  .msg { margin-top:8px; font-weight:600; min-height:1.4em; }
+  .msg.err { color:#e11d2e; }
+  .msg.ok { color:var(--accent); font-size:1.15rem; }
+  .other { margin-top:8px; display:none; }
+  .nav { display:flex; justify-content:space-between; gap:12px; margin-top:26px; }
+  .nav button { font:inherit; font-weight:700; border:none; border-radius:99px; padding:13px 26px; cursor:pointer; transition:transform .15s, opacity .2s; }
+  #back { background:var(--soft); color:var(--ink); border:2px solid var(--line); }
+  #next { background:linear-gradient(90deg,var(--accent2),var(--accent)); color:#fff; margin-left:auto; box-shadow:0 6px 16px #0003; }
+  .nav button:disabled { opacity:.35; cursor:not-allowed; }
+  .nav button:not(:disabled):hover { transform:translateY(-2px); }
+  .hidden { display:none !important; }
+  canvas { width:100%; max-width:360px; display:block; margin:0 auto; background:var(--soft); border-radius:18px; touch-action:none; border:2px solid var(--line); }
+  .hint { text-align:center; font-size:.9rem; opacity:.8; margin-top:8px; }
+  .bigzone { display:flex; flex-direction:column; align-items:center; gap:14px; margin:24px 0; }
+  .bigbtn { font:inherit; font-size:1.5rem; font-weight:800; padding:18px 60px; width:260px; border-radius:20px; border:none; background:var(--accent); color:#fff; cursor:pointer; box-shadow:0 6px 16px #0003; }
+  .bigbtn.click { animation:squish .35s; }
+  @keyframes squish { 0%{transform:scale(1)} 40%{transform:scale(.82,.7)} 70%{transform:scale(1.08,1.12)} 100%{transform:scale(1)} }
+  #grow { transform-origin:top center; transform:scale(0); transition:transform .5s cubic-bezier(.3,1.6,.5,1); pointer-events:none; background:linear-gradient(90deg,var(--accent2),var(--accent)); }
+  #grow.full { pointer-events:auto; }
+  #final { display:none; text-align:center; padding:30px 0; }
+  #final .heart { font-size:7rem; animation:beat 1.2s infinite; }
+  #final h1 { font-size:2rem; }
+  @keyframes beat { 0%,100%{transform:scale(1)} 30%{transform:scale(1.2)} 60%{transform:scale(1)} }
+  .fl { position:fixed; bottom:-40px; z-index:1; pointer-events:none; animation:floatup linear forwards; }
+  @keyframes floatup { to { transform:translateY(-115vh) rotate(25deg); opacity:0; } }
+  .burst { position:fixed; z-index:50; pointer-events:none; font-size:1.6rem; animation:burst 1.1s ease-out forwards; }
+  @keyframes burst { to { transform:translate(var(--dx),var(--dy)) scale(1.4); opacity:0; } }
+</style>
+</head>
+<body class="neutral">
+<main>
+  <div id="progress"><div id="bar"></div></div>
+  <div id="screens"></div>
+  <div id="final">
+    <div class="heart">💗</div>
+    <h1>Mám tě mocmocmocmoc rád</h1>
+    <p style="font-size:1.2rem">Děkuju za vyplnění, zlato. 💕</p>
+  </div>
+  <div class="nav" id="nav">
+    <button id="back" type="button">← Zpět</button>
+    <button id="next" type="button">Dál →</button>
+  </div>
+</main>
+
+<script>
+const ENDPOINT = 'https://formspree.io/f/mdeewapl';
+const A = { _subject: 'Dotazník od Janičky 💗' };
+const screens = [];
+let cur = null, idx = 0;
+
+const $ = h => { const t = document.createElement('template'); t.innerHTML = h.trim(); return t.content.firstChild; };
+const rnd = (a, b) => a + Math.random() * (b - a);
+
+/* ---------- efekty ---------- */
+function burst(x, y, set = ['💖','💗','💕','💘']) {
+  for (let i = 0; i < 14; i++) {
+    const s = document.createElement('span');
+    s.className = 'burst'; s.textContent = set[i % set.length];
+    s.style.left = x + 'px'; s.style.top = y + 'px';
+    const a = rnd(0, Math.PI * 2), d = rnd(60, 150);
+    s.style.setProperty('--dx', Math.cos(a) * d + 'px');
+    s.style.setProperty('--dy', Math.sin(a) * d + 'px');
+    document.body.append(s); setTimeout(() => s.remove(), 1200);
+  }
+}
+function burstAt(el, set) { const r = el.getBoundingClientRect(); burst(r.left + r.width / 2, r.top + r.height / 2, set); }
+setInterval(() => {
+  if (document.body.classList.contains('neutral') || document.hidden) return;
+  const s = document.createElement('span'); s.className = 'fl';
+  s.textContent = document.body.classList.contains('spicy') ? ['🔥','😈','❤️'][Math.floor(rnd(0,3))] : ['💗','💖','💕','🩷'][Math.floor(rnd(0,4))];
+  s.style.left = rnd(0, 97) + 'vw'; s.style.fontSize = rnd(16, 38) + 'px';
+  s.style.animationDuration = rnd(6, 11) + 's';
+  document.body.append(s); setTimeout(() => s.remove(), 11500);
+}, 700);
+
+/* ---------- engine obrazovek ---------- */
+function addScreen({ theme = 'romantic', emoji, title, sub, build }) {
+  const el = $(`<section class="screen"><div class="emojis"></div><h1></h1><p class="sub"></p></section>`);
+  el.querySelector('.emojis').textContent = emoji || '';
+  el.querySelector('h1').textContent = title;
+  el.querySelector('.sub').textContent = sub || '';
+  document.getElementById('screens').append(el);
+  const s = { el, theme, qs: [] };
+  screens.push(s); cur = s; build(el);
+  return s;
+}
+const isValid = s => s.qs.every(f => f());
+function update() { document.getElementById('next').disabled = !isValid(screens[idx]); }
+
+function show(i) {
+  idx = i;
+  screens.forEach((s, k) => s.el.classList.toggle('active', k === i));
+  document.body.className = screens[i].theme;
+  document.getElementById('bar').style.width = (i / (screens.length - 1) * 100) + '%';
+  document.getElementById('back').classList.toggle('hidden', i === 0);
+  document.getElementById('next').textContent = i === screens.length - 1 ? 'Odeslat 💌' : 'Dál →';
+  update(); window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+document.getElementById('back').onclick = () => show(idx - 1);
+document.getElementById('next').onclick = async () => {
+  if (idx < screens.length - 1) return show(idx + 1);
+  const btn = document.getElementById('next');
+  btn.disabled = true; btn.textContent = 'Odesílám… 💌';
+  try {
+    const r = await fetch(ENDPOINT, { method: 'POST', headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }, body: JSON.stringify(A) });
+    if (!r.ok) throw new Error(r.status);
+    document.getElementById('screens').style.display = 'none';
+    document.getElementById('nav').style.display = 'none';
+    document.getElementById('progress').style.display = 'none';
+    document.getElementById('final').style.display = 'block';
+    document.body.className = 'romantic';
+    for (let i = 0; i < 6; i++) setTimeout(() => burst(rnd(80, innerWidth - 80), rnd(100, innerHeight - 100)), i * 250);
+  } catch (e) {
+    btn.disabled = false; btn.textContent = 'Nepovedlo se, zkus znovu 💌';
+  }
+};
+
+/* ---------- pomocné otázky ---------- */
+function field(label, ...inputs) {
+  const w = $(`<div class="q"><label></label></div>`);
+  w.firstChild.textContent = label; w.append(...inputs); cur.el.append(w); return w;
+}
+function qText(label, key, { multi, ph, type = 'text' } = {}) {
+  const i = document.createElement(multi ? 'textarea' : 'input');
+  if (!multi) i.type = type;
+  i.placeholder = ph || '';
+  const on = () => { A[key] = i.value.trim(); update(); };
+  i.addEventListener('input', on); i.addEventListener('change', on);
+  field(label, i); cur.qs.push(() => !!i.value.trim());
+  return i;
+}
+const OTHER = 'Jiná (vlastní)';
+function qChoice(label, key, options, { correct, other, blockWrong, cls = '' } = {}) {
+  const box = $(`<div class="opts ${cls}"></div>`);
+  let val = null;
+  const oi = $(`<input type="text" class="other" placeholder="Napiš vlastní odpověď…">`);
+  const sync = () => { A[key] = val === OTHER ? oi.value.trim() : val; update(); };
+  oi.addEventListener('input', sync);
+  options.forEach(o => {
+    const b = $(`<button type="button" class="opt"></button>`); b.textContent = o;
+    const wrong = correct && !correct.includes(o);
+    if (wrong && blockWrong) { b.classList.add('blocked'); b.disabled = true; }
+    b.onclick = () => {
+      if (wrong) { b.classList.add('bad'); return; }
+      val = o;
+      box.querySelectorAll('.opt').forEach(x => x.classList.remove('sel'));
+      b.classList.add('sel');
+      oi.style.display = o === OTHER ? 'block' : 'none';
+      if (o === OTHER) oi.focus();
+      sync();
+    };
+    box.append(b);
+  });
+  field(label, box, oi);
+  cur.qs.push(() => val !== null && (val !== OTHER || !!oi.value.trim()));
+}
+
+/* =========================================================
+   0) ÚVOD – neutrální, rejpavá
+   ========================================================= */
+addScreen({
+  theme: 'neutral', emoji: '😈👿😈',
+  title: 'Která z mých všech děvek tohle vyplňuje?',
+  sub: 'Mám jich hodně a potřebuju si v tom udělat nějaký pořádek.',
+  build(el) {
+    const chain = ['Jana', 'Janička', 'Janička květinka', 'Moje Janička Květinka'];
+    let stage = 0, done = false;
+    const box = $(`<div class="opts col"></div>`);
+    const msg = $(`<div class="msg ok"></div>`);
+    const add = name => {
+      const b = $(`<button type="button" class="opt pop"></button>`); b.textContent = name;
+      b.onclick = () => {
+        if (done || b.classList.contains('bad') || b.classList.contains('good')) return;
+        if (name !== chain[stage]) { b.classList.add('bad'); return; }
+        if (stage === chain.length - 1) {
+          b.classList.add('good'); done = true;
+          el.querySelector('.emojis').textContent = '🥰😍🥰';
+          el.querySelector('h1').textContent = 'Jsi šikula! 💖';
+          el.querySelector('.sub').textContent = 'Můžeme pokračovat dál…';
+          A['Kdo vyplňuje'] = name;
+          burstAt(b); update();
+        } else {
+          b.classList.add('bad'); stage++; add(chain[stage]);
+        }
+      };
+      box.append(b);
+    };
+    ['Barča', 'Adéla', 'Eliška', 'Jana'].forEach(n => add(n));
+    el.append(box, msg);
+    cur.qs.push(() => done);
+  }
+});
+
+/* =========================================================
+   1) NĚCO O JANIČCE
+   ========================================================= */
+addScreen({
+  emoji: '🌸💕🌸', title: 'Něco o Janičce', sub: 'Pěkně pravdivě, ať to stojí za to 😘',
+  build() {
+    qText('Jak se máš?', 'Jak se má', { multi: true, ph: 'Napiš, jak se opravdu máš…' });
+    qChoice('Jaká je tvoje nejoblíbenější barva?', 'Nejoblíbenější barva',
+      ['Modrá', 'Zelená', 'Žlutá', 'Černá', 'Fialová', 'Oranžová', 'Růžová'], { correct: ['Růžová'] });
+    qText('Jaká je tvoje nejoblíbenější květina?', 'Nejoblíbenější květina', { multi: true, ph: 'Rozepiš se…' });
+    qChoice('Kolik měříš?', 'Výška',
+      Array.from({ length: 11 }, (_, i) => (160 + i) + ' cm'), { correct: ['166 cm'], blockWrong: true });
+    qText('Jakou máš velikost bot?', 'Velikost bot', { ph: 'např. 38' });
+    qText('Jaké všechny sporty jsi za svůj život dělala a jak dlouho?', 'Sporty a jak dlouho', { multi: true });
+    qText('Jaký tě ten sport bavil nebo baví nejvíc?', 'Nejoblíbenější sport', { multi: true });
+  }
+});
+
+/* =========================================================
+   2) JÍDLO
+   ========================================================= */
+addScreen({
+  emoji: '🍕🍓🥐', title: 'Jídlo a pití', sub: 'Cesta k srdci vede přes žaludek 😋',
+  build() {
+    qText('Nejoblíbenější jídlo?', 'Nejoblíbenější jídlo', { multi: true });
+    qText('Nejoblíbenější pití?', 'Nejoblíbenější pití', { multi: true });
+    qChoice('Slaná nebo sladká snídaně?', 'Snídaně', ['Slaná 🧀', 'Sladká 🍯'], { });
+    // snack
+    const i = document.createElement('input'); i.type = 'text'; i.placeholder = 'Napiš svůj nejoblíbenější snack…';
+    const msg = $(`<div class="msg"></div>`);
+    let ok = false;
+    const norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    const check = () => {
+      const n = norm(i.value.trim());
+      ok = /ocel|mi\s?san|misa|(^|[^a-z])ty([^a-z]|$)/.test(n);
+      if (!n) { msg.textContent = ''; msg.className = 'msg'; }
+      else if (ok) {
+        msg.className = 'msg ok'; msg.textContent = '😳😳 Ty blázínku 💕';
+        A['Nejoblíbenější snack'] = i.value.trim();
+      } else { msg.className = 'msg err'; msg.textContent = 'To není ono 🙈 Zkus to znovu…'; }
+      update();
+    };
+    i.addEventListener('input', check);
+    i.addEventListener('change', () => { if (ok) burstAt(i); });
+    i.addEventListener('blur', () => { if (ok) burstAt(msg); });
+    i.addEventListener('keydown', e => { if (e.key === 'Enter' && ok) burstAt(msg); });
+    let last = false;
+    i.addEventListener('input', () => { if (ok && !last) burstAt(msg); last = ok; });
+    field('Tvůj nejoblíbenější snack?', i, msg);
+    cur.qs.push(() => ok);
+  }
+});
+
+/* =========================================================
+   3) CESTOVÁNÍ
+   ========================================================= */
+addScreen({
+  emoji: '✈️🏖️🏔️', title: 'Cestování', sub: 'Kam spolu vyrazíme? 🌍',
+  build() {
+    qChoice('Máš radši zimní nebo letní dovolenou?', 'Dovolená', ['Zimní ❄️', 'Letní ☀️']);
+    // vlajka
+    const i = document.createElement('input'); i.type = 'text'; i.placeholder = '🏳️ …vlož emoji vlajky';
+    const msg = $(`<div class="msg"></div>`);
+    let ok = false;
+    i.addEventListener('input', () => {
+      ok = /[\u{1F1E6}-\u{1F1FF}]{2}/u.test(i.value);
+      if (!i.value.trim()) { msg.textContent = ''; msg.className = 'msg'; }
+      else if (ok) { msg.className = 'msg ok'; msg.textContent = 'Jdeme tam! 🧳'; A['Vysněná země (vlajka)'] = i.value.trim(); }
+      else { msg.className = 'msg err'; msg.textContent = 'Tohle není vlajka 🏴 Musí to být emoji vlajky!'; }
+      update();
+    });
+    field('Do jaké země na dovolenou byses chtěla podívat se mnou? (zadej ji jako emoji vlajku)', i, msg);
+    cur.el.lastChild.append($(`<div class="hint">Tip: Windows – Win + . (tečka) · mobil – emoji klávesnice 🌐</div>`));
+    cur.qs.push(() => ok);
+    qText('Kde se ti kdy líbilo nejvíc ze všech míst, kde jsi kdy byla?', 'Nejhezčí místo', { multi: true });
+    qChoice('Jsi schopná se naučit na snowboardu? 🏂', 'Snowboard', ['Ne', 'Ano'], { correct: ['Ano'] });
+    qChoice('Půjdeš se mnou někdy potápět? 🤿', 'Potápění', ['Ne', 'Ano'], { correct: ['Ano'] });
+  }
+});
+
+/* =========================================================
+   4) O NÁS DVOU
+   ========================================================= */
+addScreen({
+  emoji: '💑💞💑', title: 'O nás dvou', sub: 'Jak moc si pamatuješ? 🥰',
+  build() {
+    qText('😍🥰 Kdy jsme si dali první pusu?', 'První pusa', { type: 'datetime-local' });
+    qText('😢😭 Kdy jsme si dali poslední pusu?', 'Poslední pusa', { type: 'datetime-local' });
+    qChoice('Co bylo podle tebe naše první rande?', 'První rande',
+      ['Kulečník', 'MiniGolf', 'Procházka po Telči', 'Sezení v parku v Praze', 'Bowling', 'Koukání na Love Island'], { cls: 'col' });
+    qText('Jak podle tvé představy vypadá nejlepší společně strávený čas?', 'Nejlepší společný čas', { multi: true });
+    qText('Co máš na našem vztahu nejraději?', 'Co má na vztahu nejraději', { multi: true });
+    qText('Co na našem vztahu naopak nemáš ráda?', 'Co nemá ráda', { multi: true });
+    qText('Co bys chtěla společně zažít?', 'Co chce zažít', { multi: true });
+    qChoice('Jak moc mě máš ráda?', 'Jak moc mě má ráda', ['Dost', 'Hodně', 'Nejvíc na světě', OTHER], { other: true });
+  }
+});
+
+/* =========================================================
+   5) INTIMNÍ
+   ========================================================= */
+addScreen({
+  theme: 'spicy', emoji: '😈🔥😏', title: 'Zlobivá sekce', sub: 'Tady už se nesmí lhát, čertíku… 👿',
+  build() {
+    qText('😏🔥 Kdy jsme spolu měli první sex?', 'První sex', { type: 'datetime-local' });
+    qChoice('Kolik z 10 tě sex baví?', 'Sex 1-10', Array.from({ length: 10 }, (_, i) => String(i + 1)), { cls: 'scale' });
+    qText('Co máš na tom nejraději?', 'Sex – nejradši', { multi: true });
+    qText('Co naopak nemáš ráda nebo bys chtěla změnit?', 'Sex – změnit', { multi: true });
+    qText('Co bys chtěla vyzkoušet? 😈', 'Sex – vyzkoušet', { multi: true });
+    qText('Nejoblíbenější poloha?', 'Sex – poloha', { multi: true });
+  }
+});
+
+/* =========================================================
+   6) MINIHRA – BASKET
+   ========================================================= */
+addScreen({
+  emoji: '🏀💗🏀', title: 'Trefíš se?', sub: 'Střel srdíčko do koše. Dokud se netrefíš, nepůjdeš dál 😏',
+  build(el) {
+    const W = 360, H = 520;
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const ctx = cv.getContext('2d');
+    const msg = $(`<div class="msg"></div>`);
+    el.append(cv, $(`<div class="hint">Chytni srdíčko dole, potáhni dozadu a pusť. Koš se hýbe!</div>`), msg);
+
+    const R = 13, G = 700, K = 9.5, MAXD = 90, SX = 180, SY = 460;
+    let ball = { x: SX, y: SY, vx: 0, vy: 0 }, flying = false, drag = null, misses = 0, scored = false, scoredFlash = 0;
+    let t = 0, last = performance.now();
+    const hoop = () => {
+      const hx = 180 + 55 * Math.sin(t * 0.9), half = 34 + Math.min(misses, 6) * 3;
+      return { hx, half, rimY: 130 };
+    };
+    const heart = (x, y, s, fill) => {
+      ctx.save(); ctx.translate(x, y); ctx.scale(s / 16, s / 16); ctx.beginPath();
+      ctx.moveTo(0, 6); ctx.bezierCurveTo(-18, -6, -8, -18, 0, -8); ctx.bezierCurveTo(8, -18, 18, -6, 0, 6);
+      ctx.fillStyle = fill; ctx.fill(); ctx.restore();
+    };
+    const bounce = (px, py, r, e) => {
+      const dx = ball.x - px, dy = ball.y - py, d = Math.hypot(dx, dy);
+      if (d < R + r && d > 0) {
+        const nx = dx / d, ny = dy / d;
+        ball.x = px + nx * (R + r); ball.y = py + ny * (R + r);
+        const vn = ball.vx * nx + ball.vy * ny;
+        if (vn < 0) { ball.vx -= (1 + e) * vn * nx; ball.vy -= (1 + e) * vn * ny; }
+      }
+    };
+    const board = h => ({ x1: h.hx - 65, x2: h.hx + 65, y1: 36, y2: 116 });
+    const step = dt => {
+      const h = hoop(), b = board(h), py = ball.y;
+      ball.vy += G * dt; ball.x += ball.vx * dt; ball.y += ball.vy * dt;
+      // deska
+      const cx = Math.max(b.x1, Math.min(ball.x, b.x2)), cy = Math.max(b.y1, Math.min(ball.y, b.y2));
+      bounce(cx, cy, 0, 0.55);
+      bounce(h.hx - h.half, h.rimY, 4, 0.6);
+      bounce(h.hx + h.half, h.rimY, 4, 0.6);
+      if (ball.vy > 0 && py < h.rimY && ball.y >= h.rimY && Math.abs(ball.x - h.hx) < h.half - 4) {
+        if (!scored) {
+          scored = true; msg.className = 'msg ok'; msg.textContent = 'Trefa! 💘 Jsi nejlepší!';
+          A['Basket – počet neúspěšných pokusů'] = misses;
+          const r = cv.getBoundingClientRect(); burst(r.left + r.width / 2, r.top + 120);
+          update();
+        }
+        scoredFlash = 1;
+      }
+      if (ball.y > H + 40 || ball.x < -40 || ball.x > W + 40) {
+        if (!scoredFlash) misses++;
+        scoredFlash = 0; flying = false; ball = { x: SX, y: SY, vx: 0, vy: 0 };
+        if (!scored) { msg.className = 'msg err'; msg.textContent = 'Vedle 🙈 Zkus to znovu! (pokus ' + (misses + 1) + ')'; }
+      }
+    };
+    const draw = () => {
+      ctx.clearRect(0, 0, W, H);
+      const h = hoop(), b = board(h);
+      // deska
+      ctx.fillStyle = '#fff'; ctx.strokeStyle = '#e91e78'; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.roundRect(b.x1, b.y1, b.x2 - b.x1, b.y2 - b.y1, 8); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#e91e78'; ctx.font = 'bold 19px Segoe UI, sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('Janička + Mišan', h.hx, 82); ctx.fillText('💗', h.hx, 106);
+      // síťka
+      ctx.strokeStyle = '#ffffffcc'; ctx.lineWidth = 2;
+      for (let k = 0; k <= 4; k++) {
+        const x1 = h.hx - h.half + k * (2 * h.half / 4), x2 = h.hx - h.half * 0.6 + k * (1.2 * h.half / 4);
+        ctx.beginPath(); ctx.moveTo(x1, h.rimY); ctx.lineTo(x2, h.rimY + 38); ctx.stroke();
+      }
+      // obruč
+      ctx.strokeStyle = '#ff5a1f'; ctx.lineWidth = 6; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(h.hx - h.half, h.rimY); ctx.lineTo(h.hx + h.half, h.rimY); ctx.stroke();
+      // zaměřovač
+      if (drag && !flying) {
+        let x = ball.x, y = ball.y, vx = -drag.dx * K, vy = -drag.dy * K;
+        ctx.fillStyle = '#e91e78aa';
+        for (let k = 0; k < 28; k++) {
+          vy += G * 0.03; x += vx * 0.03; y += vy * 0.03;
+          if (k % 2) { ctx.beginPath(); ctx.arc(x, y, 3, 0, 7); ctx.fill(); }
+        }
+      }
+      heart(ball.x, ball.y + 2, R * 2.2, '#ff5fa2');
+      heart(ball.x - 3, ball.y - 2, R * 0.7, '#ffffff99');
+    };
+    const loop = now => {
+      const dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt;
+      if (flying) for (let k = 0; k < 6; k++) step(dt / 6);
+      draw(); requestAnimationFrame(loop);
+    };
+    requestAnimationFrame(loop);
+
+    const pos = e => { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height }; };
+    cv.onpointerdown = e => {
+      if (flying) return; const p = pos(e);
+      if (Math.hypot(p.x - ball.x, p.y - ball.y) < 60) { drag = { dx: 0, dy: 0 }; cv.setPointerCapture(e.pointerId); }
+    };
+    cv.onpointermove = e => {
+      if (!drag) return; const p = pos(e); let dx = p.x - SX, dy = p.y - SY, d = Math.hypot(dx, dy);
+      if (d > MAXD) { dx *= MAXD / d; dy *= MAXD / d; }
+      drag = { dx, dy }; ball.x = SX + dx; ball.y = SY + dy;
+    };
+    cv.onpointerup = () => {
+      if (!drag) return; const { dx, dy } = drag; drag = null;
+      if (Math.hypot(dx, dy) < 12) { ball.x = SX; ball.y = SY; return; }
+      ball = { x: SX + dx, y: SY + dy, vx: -dx * K, vy: -dy * K }; flying = true; scoredFlash = 0;
+    };
+    cur.qs.push(() => scored);
+  }
+});
+
+/* =========================================================
+   7) PŮJDEŠ NA RANDE?
+   ========================================================= */
+addScreen({
+  emoji: '🌹💌🌹', title: 'Půjdeš semnou na rande?', sub: 'Odpověz správně 😉',
+  build() {
+    qChoice('Tak co?', 'Půjde na rande',
+      ['Ne 🙅‍♀️', 'Nevím 🤷‍♀️', 'Možná 🤔', 'Až někdy jindy 😴', 'Ano 💖'], { correct: ['Ano 💖'], cls: 'col' });
+  }
+});
+
+/* =========================================================
+   8) KDY A JAK
+   ========================================================= */
+addScreen({
+  emoji: '📅💘🥂', title: 'Naše rande', sub: 'Kdy a jaké to bude? ✨',
+  build() {
+    qText('Kdy teda na to rande půjdeme?', 'Kdy rande', { type: 'datetime-local' });
+    qChoice('Chceš kulturní nebo sportovní rande?', 'Typ rande', ['Kulturní 🎭', 'Sportovní 🏐']);
+    qText('Co bys na něm chtěla dělat?', 'Co na rande', { multi: true });
+  }
+});
+
+/* =========================================================
+   9) POSLEDNÍ OTÁZKA
+   ========================================================= */
+addScreen({
+  emoji: '😎💪😎', title: 'Poslední otázka', sub: 'Jsem frajer a „ocelovej“?',
+  build(el) {
+    let clicks = 0, done = false;
+    const need = 5;
+    const zone = $(`<div class="bigzone"></div>`);
+    const yes = $(`<button type="button" class="bigbtn">Ano</button>`);
+    const grow = $(`<button type="button" class="bigbtn" id="grow">Největší na světě</button>`);
+    const msg = $(`<div class="msg ok" style="text-align:center"></div>`);
+    zone.append(yes, grow); el.append(zone, msg);
+    yes.onclick = () => {
+      if (done) return;
+      yes.classList.remove('click'); void yes.offsetWidth; yes.classList.add('click');
+      clicks = Math.min(clicks + 1, need);
+      grow.style.transform = `scale(${clicks / need})`;
+      if (clicks === need) grow.classList.add('full');
+    };
+    grow.onclick = () => {
+      if (done) return; done = true;
+      grow.classList.remove('full'); yes.classList.remove('click');
+      yes.style.opacity = .5; grow.classList.add('click');
+      msg.textContent = 'Správně! Hodná holka 💖💖💖';
+      A['Frajer a ocelovej'] = 'Ano → Největší na světě';
+      burstAt(grow); setTimeout(() => burstAt(msg), 300);
+      update();
+    };
+    cur.qs.push(() => done);
+  }
+});
+
+show(0);
+</script>
+</body>
+</html>
